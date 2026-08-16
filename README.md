@@ -1,56 +1,115 @@
 # shot
 
-Screenshots that paste into the right thing.
+**Screenshots that paste into the right thing.**
 
-A lightweight take on [Screenshot for Chat](https://github.com/obra/ScreenshotForChat). Capture a region, window, or screen. The **image** goes to visual apps. The **temp path** goes to your coding agent. One command to install — no brew, no Swift, no Apple Silicon requirement.
+A lightweight take on [Screenshot for Chat](https://github.com/obra/ScreenshotForChat). Capture a region, window, or screen. The **image** goes to visual apps, while the **temporary file path** goes to terminals and coding agents.
 
-**Page:** [obliviousodin.github.io/shot](https://obliviousodin.github.io/shot/)
+[Open the browser workspace](https://obliviousodin.github.io/shot/) · [View the installer](https://obliviousodin.github.io/shot/install.sh)
+
+![Install shot with one shell command](docs/media/install-command.png)
 
 ## Install
+
+`shot` is a readable POSIX shell script. It does not require Homebrew, Swift, or an account.
 
 ```sh
 curl -fsSL https://obliviousodin.github.io/shot/install.sh | sh
 ```
 
-Drops `~/.local/bin/shot`. Add that directory to `PATH` if it is not already.
+The installer writes `shot` to `~/.local/bin/shot`. If that directory is not already on your `PATH`, add this line to your shell configuration (`~/.zshrc`, `~/.bashrc`, or equivalent):
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Then open a new terminal and verify the installation:
+
+```sh
+command -v shot
+shot -h
+```
+
+Want to inspect the installer first? Download it, read it, and then run it:
+
+```sh
+curl -fsSL https://obliviousodin.github.io/shot/install.sh -o install-shot.sh
+less install-shot.sh
+sh install-shot.sh
+rm install-shot.sh
+```
+
+### macOS permission
+
+On first capture, macOS may require your terminal to have **Screen & System Audio Recording** access:
+
+1. Open **System Settings → Privacy & Security → Screen & System Audio Recording**.
+2. Enable the terminal app you use.
+3. Quit and reopen that terminal, then run `shot` again.
+
+![Allow the terminal to capture the screen on macOS](docs/media/macos-permission.png)
 
 ## Usage
 
 ```sh
-shot        # drag a region (default)
-shot -w     # click a window
-shot -f     # full screen
-shot -h     # help
+shot              # drag a region (default)
+shot -w           # click a window
+shot -f           # capture the full screen
+shot -o demo.png  # choose the output path
+shot -h           # show help
 ```
 
-After capture:
+![Shot command-line usage](docs/media/usage.png)
 
-- Image-aware apps (Slack, Messages, Figma) receive the PNG
-- Text-aware apps (terminals, Claude Code, agents) receive the file path
-- The path is also printed to stdout
+After a successful capture:
 
-Files land in `$TMPDIR` as `shot-YYYYMMDD-HHMMSS.png`. Do not depend on them lasting an hour.
+- Image-aware apps such as Slack, Messages, and Figma receive the PNG.
+- Text-aware apps such as terminals and coding agents receive the file path.
+- The path is also printed to standard output.
+
+Without `-o`, files are written to `$TMPDIR` as `shot-YYYYMMDD-HHMMSS.png`. Treat them as temporary files.
 
 ## Requirements
 
-**macOS** — `screencapture` (built in). Dual clipboard via AppKit: PNG + path on the same pasteboard.
+### macOS
 
-**Linux** — one capture backend and one clipboard tool:
+`screencapture` is built into macOS. `shot` uses AppKit to place the PNG and its path on the same pasteboard.
 
-| Role | Tools |
+### Linux
+
+Install one capture backend and one clipboard tool:
+
+| Role | Supported tools |
 | --- | --- |
 | Capture | `grim` + `slurp` (Wayland), `maim`, `gnome-screenshot`, `scrot`, or ImageMagick `import` |
 | Clipboard | `wl-copy` (Wayland) or `xclip` / `xsel` (X11) |
 
-On Linux the image goes to the clipboard and the path goes to the primary selection.
+On Linux, the image goes to the clipboard and the path goes to the primary selection.
 
 ## Browser workspace
 
-This repo also has an in-browser capture tool (paste, drop, or screen share) with the same smart clipboard. Open the [GitHub Page](https://obliviousodin.github.io/shot/) or run the app locally:
+The browser workspace can capture a shared screen, accept a pasted or uploaded image, crop it, and prepare image, path, Markdown, or prompt-friendly clipboard output. Processing stays in the browser.
+
+[Open the hosted workspace](https://obliviousodin.github.io/shot/), or run it locally:
 
 ```sh
-npm install
+git clone https://github.com/ObliviousOdin/shot.git
+cd shot
+npm ci
 npm run dev
+```
+
+Then open <http://127.0.0.1:8080/>.
+
+![Shot browser workspace with a sample image loaded](docs/media/browser-workspace.png)
+
+## Development
+
+```sh
+npm ci
+npm test
+npm run typecheck
+npm run lint
+npm run build
 ```
 
 ## License
