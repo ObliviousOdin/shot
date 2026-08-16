@@ -26,6 +26,12 @@ export function SiteHeader({ className }: { className?: string }) {
             Capture
           </a>
           <a
+            href="https://github.com/ObliviousOdin/shot"
+            className="hidden rounded-sm px-3 py-2 text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline"
+          >
+            GitHub
+          </a>
+          <a
             href="#install"
             className="hidden rounded-sm px-3 py-2 text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline"
           >
