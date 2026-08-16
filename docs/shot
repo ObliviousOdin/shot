@@ -1,0 +1,158 @@
+#!/bin/sh
+# shot — screenshots for chat
+# Capture a region, window, or screen. Image + temp path land on the clipboard.
+# Usage: shot [-r|-w|-f] [-o file.png]
+set -eu
+
+MODE=region
+OUT=""
+
+usage() {
+  cat <<'EOF'
+shot — capture a screenshot for pasting into apps and AI chats
+
+Usage: shot [-r|-w|-f] [-o file.png]
+
+  -r, --region       drag a region (default)
+  -w, --window       click a window
+  -f, --full         entire screen
+  -o, --out FILE     write here instead of $TMPDIR/shot-TIMESTAMP.png
+  -h, --help         this help
+
+After capture:
+  • image-aware apps (Slack, Messages, Figma) receive the PNG
+  • text-aware apps (terminals, Claude Code, agents) receive the file path
+  • the path is also printed to stdout
+
+Files live in the system temp directory. Do not depend on them lasting an hour.
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -r|--region) MODE=region ;;
+    -w|--window) MODE=window ;;
+    -f|--full|--fullscreen) MODE=full ;;
+    -o|--out)
+      [ $# -ge 2 ] || { echo "shot: -o needs a path" >&2; exit 2; }
+      OUT=$2
+      shift
+      ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "shot: unknown option: $1" >&2; usage >&2; exit 2 ;;
+  esac
+  shift
+done
+
+TMP=${TMPDIR:-/tmp}
+# shellcheck disable=SC2039
+STAMP=$(date +%Y%m%d-%H%M%S)
+OUT=${OUT:-$TMP/shot-$STAMP.png}
+
+js_escape() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+capture_darwin() {
+  case "$MODE" in
+    region) screencapture -i -x "$OUT" ;;
+    window) screencapture -W -x "$OUT" ;;
+    full)   screencapture -x "$OUT" ;;
+  esac
+}
+
+capture_linux() {
+  if [ -n "${WAYLAND_DISPLAY:-}" ] && command -v grim >/dev/null 2>&1 && command -v slurp >/dev/null 2>&1; then
+    case "$MODE" in
+      region) grim -g "$(slurp)" "$OUT" ;;
+      window) grim -g "$(slurp -o)" "$OUT" ;;
+      full)   grim "$OUT" ;;
+    esac
+  elif command -v maim >/dev/null 2>&1; then
+    case "$MODE" in
+      region) maim -s "$OUT" ;;
+      window) maim -st 9999999 "$OUT" ;;
+      full)   maim "$OUT" ;;
+    esac
+  elif command -v gnome-screenshot >/dev/null 2>&1; then
+    case "$MODE" in
+      region) gnome-screenshot -a -f "$OUT" ;;
+      window) gnome-screenshot -w -f "$OUT" ;;
+      full)   gnome-screenshot -f "$OUT" ;;
+    esac
+  elif command -v scrot >/dev/null 2>&1; then
+    case "$MODE" in
+      region) scrot -s "$OUT" ;;
+      window) scrot -s "$OUT" ;;
+      full)   scrot "$OUT" ;;
+    esac
+  elif command -v import >/dev/null 2>&1; then
+    case "$MODE" in
+      region|window) import "$OUT" ;;
+      full) import -window root "$OUT" ;;
+    esac
+  else
+    cat >&2 <<'EOF'
+shot: no screenshot backend found.
+
+Install one of:
+  Wayland   grim + slurp
+  X11       maim   (or scrot, or ImageMagick 'import')
+  GNOME     gnome-screenshot
+EOF
+    exit 1
+  fi
+}
+
+copy_darwin() {
+  JS_PATH=$(js_escape "$OUT")
+  osascript -l JavaScript >/dev/null <<JXA
+ObjC.import("AppKit");
+var path = "${JS_PATH}";
+var pb = $.NSPasteboard.generalPasteboard;
+pb.clearContents;
+var img = $.NSImage.alloc.initWithContentsOfFile(path);
+if (img) {
+  pb.writeObjects([img]);
+}
+pb.setStringForType(path, $.NSPasteboardTypeString);
+JXA
+}
+
+copy_linux() {
+  if command -v wl-copy >/dev/null 2>&1 && [ -n "${WAYLAND_DISPLAY:-}" ]; then
+    # Image on clipboard, path on primary — closest dual-paste we can do.
+    wl-copy --type image/png < "$OUT"
+    printf '%s' "$OUT" | wl-copy --primary --type text/plain
+  elif command -v xclip >/dev/null 2>&1; then
+    xclip -selection clipboard -t image/png -i "$OUT"
+    printf '%s' "$OUT" | xclip -selection primary
+  elif command -v xsel >/dev/null 2>&1; then
+    xsel --clipboard --input < "$OUT"
+    printf '%s' "$OUT" | xsel --primary --input
+  else
+    echo "shot: captured, but no clipboard tool (wl-copy / xclip / xsel)" >&2
+  fi
+}
+
+SYS=$(uname -s)
+case "$SYS" in
+  Darwin) capture_darwin ;;
+  Linux)  capture_linux ;;
+  *)
+    echo "shot: unsupported system: $SYS" >&2
+    exit 1
+    ;;
+esac
+
+if [ ! -s "$OUT" ]; then
+  echo "shot: cancelled" >&2
+  exit 1
+fi
+
+case "$SYS" in
+  Darwin) copy_darwin ;;
+  Linux)  copy_linux ;;
+esac
+
+printf '%s\n' "$OUT"

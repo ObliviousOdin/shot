@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>shot — screenshots for chat</title>
+    <meta
+      name="description"
+      content="A 6KB POSIX screenshot tool for AI chats. Image for visual apps, path for your coding agent. One-line install."
+    />
+    <meta name="theme-color" content="#0c0c0d" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="shot — screenshots for chat" />
+    <meta
+      property="og:description"
+      content="Capture. Dual clipboard. Paste into chat. One command to install."
+    />
+    <meta property="og:image" content="og.jpg" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0c0c0d;
+        --surface: #141416;
+        --elevated: #1c1c1f;
+        --fg: #ecece8;
+        --muted: #8e8e86;
+        --subtle: #5e5e58;
+        --border: #2a2a2c;
+        --accent: #d4d0c8;
+        --accent-fg: #0c0c0d;
+        --ok: #7f9a78;
+        --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--font-sans);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; text-decoration: none; }
+      button { font: inherit; cursor: pointer; }
+      code, pre, .mono { font-family: var(--font-mono); }
+      .wrap { max-width: 720px; margin: 0 auto; padding: 0 20px 80px; }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 56px;
+        border-bottom: 1px solid var(--border);
+      }
+      .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 14px; }
+      .brand svg { display: block; }
+      nav { display: flex; gap: 18px; font-size: 14px; color: var(--muted); }
+      nav a:hover { color: var(--fg); }
+      .eyebrow {
+        display: flex; gap: 8px; flex-wrap: wrap; margin: 56px 0 16px;
+      }
+      .pill {
+        background: var(--elevated);
+        color: var(--muted);
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 4px;
+      }
+      .pill.ok { background: rgba(127, 154, 120, 0.15); color: var(--ok); }
+      h1 {
+        font-size: clamp(2rem, 6vw, 3.25rem);
+        font-weight: 500;
+        letter-spacing: -0.03em;
+        line-height: 1.08;
+        margin: 0 0 16px;
+        text-wrap: balance;
+      }
+      .lede { color: var(--muted); font-size: 1.05rem; max-width: 38rem; margin: 0 0 28px; }
+      .install {
+        display: flex;
+        align-items: stretch;
+        background: var(--elevated);
+        border-radius: 8px;
+        box-shadow: 0 0 0 1px rgba(236, 236, 232, 0.08);
+        overflow: hidden;
+      }
+      .install code {
+        flex: 1;
+        min-width: 0;
+        padding: 14px 16px;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+      }
+      .install button {
+        border: 0;
+        border-left: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        padding: 0 16px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+      .install button:hover { color: var(--fg); background: var(--surface); }
+      .hint { font-family: var(--font-mono); font-size: 12px; color: var(--subtle); margin: 12px 0 0; }
+      h2 { font-size: 1.35rem; font-weight: 500; letter-spacing: -0.02em; margin: 56px 0 12px; }
+      .label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--subtle); margin: 56px 0 8px; }
+      .cmds { list-style: none; padding: 0; margin: 16px 0 0; }
+      .cmds li { font-family: var(--font-mono); font-size: 14px; padding: 6px 0; }
+      .cmds .dim { color: var(--muted); margin-left: 16px; }
+      .cmds .prompt { color: var(--subtle); }
+      .grid { display: grid; gap: 12px; margin-top: 16px; }
+      @media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr 1fr; } }
+      .card {
+        background: var(--surface);
+        border-radius: 12px;
+        padding: 18px 18px 20px;
+        box-shadow: 0 0 0 1px rgba(236, 236, 232, 0.08);
+      }
+      .card .n { font-family: var(--font-mono); font-size: 11px; color: var(--subtle); }
+      .card h3 { margin: 10px 0 6px; font-size: 15px; font-weight: 500; }
+      .card p { margin: 0; font-size: 14px; color: var(--muted); }
+      .row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem;
+        align-items: center;
+        padding: 11px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+      }
+      .table { background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(236, 236, 232, 0.08); margin-top: 16px; }
+      .row.head { font-size: 11px; color: var(--subtle); font-weight: 500; }
+      .row span:nth-child(2), .row span:nth-child(3) { text-align: center; }
+      .row .name { color: var(--muted); }
+      .yes { color: var(--ok); }
+      .no { color: var(--subtle); }
+      footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 12px; color: var(--subtle); display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
+      pre.block {
+        background: var(--elevated);
+        border-radius: 12px;
+        padding: 16px 18px;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--muted);
+        overflow-x: auto;
+        box-shadow: 0 0 0 1px rgba(236, 236, 232, 0.08);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="./">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="4" y="6" width="16" height="12" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M4 6h2.6M17.4 6H20M4 18h2.6M17.4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+          </svg>
+          shot
+        </a>
+        <nav>
+          <a href="https://github.com/ObliviousOdin/shot">GitHub</a>
+          <a href="./install.sh">install.sh</a>
+        </nav>
+      </header>
+
+      <div class="eyebrow">
+        <span class="pill">for AI chats</span>
+        <span class="pill ok">6 KB · no brew</span>
+      </div>
+      <h1>Screenshots that paste into the right thing.</h1>
+      <p class="lede">
+        A lightweight take on Screenshot for Chat. Capture a region. The image
+        goes to visual apps. The temp path goes to your coding agent.
+      </p>
+
+      <div class="install">
+        <code id="cmd">curl -fsSL https://obliviousodin.github.io/shot/install.sh | sh</code>
+        <button type="button" id="copy">copy</button>
+      </div>
+      <p class="hint">Drops ~/.local/bin/shot. macOS and Linux. No compiler, no cask.</p>
+
+      <p class="label">CLI</p>
+      <h2>Same idea as a 6 KB script.</h2>
+      <ul class="cmds">
+        <li><span class="prompt">$ </span>shot<span class="dim">region</span></li>
+        <li><span class="prompt">$ </span>shot -w<span class="dim">window</span></li>
+        <li><span class="prompt">$ </span>shot -f<span class="dim">full screen</span></li>
+      </ul>
+      <pre class="block" style="margin-top:20px"># writes  $TMPDIR/shot-YYYYMMDD-HHMMSS.png
+# copies  PNG  →  visual apps
+# copies  path →  terminals / agents
+# prints  the path on stdout</pre>
+
+      <p class="label">How it works</p>
+      <div class="grid">
+        <article class="card">
+          <div class="n">01</div>
+          <h3>Capture</h3>
+          <p>Region, window, or full screen. One shell command on your machine.</p>
+        </article>
+        <article class="card">
+          <div class="n">02</div>
+          <h3>Dual clipboard</h3>
+          <p>PNG and temp path written together. Apps pick the format they want.</p>
+        </article>
+        <article class="card">
+          <div class="n">03</div>
+          <h3>Paste into chat</h3>
+          <p>Slack gets pixels. Claude Code gets /tmp/shot-….png. No extra hop.</p>
+        </article>
+      </div>
+
+      <p class="label">Versus the original</p>
+      <h2>Same paste. Smaller surface.</h2>
+      <div class="table">
+        <div class="row head"><span></span><span>Original</span><span>shot</span></div>
+        <div class="row"><span class="name">macOS only</span><span class="yes">yes</span><span class="no">—</span></div>
+        <div class="row"><span class="name">Apple Silicon required</span><span class="yes">yes</span><span class="no">—</span></div>
+        <div class="row"><span class="name">Swift app</span><span class="yes">yes</span><span class="no">—</span></div>
+        <div class="row"><span class="name">Single-file POSIX install</span><span class="no">—</span><span class="yes">yes</span></div>
+        <div class="row"><span class="name">Linux + macOS</span><span class="no">—</span><span class="yes">yes</span></div>
+        <div class="row"><span class="name">Image + path on clipboard</span><span class="yes">yes</span><span class="yes">yes</span></div>
+      </div>
+
+      <footer>
+        <span class="mono">shot</span>
+        <span>Inspired by Jesse Vincent’s Screenshot for Chat. MIT licensed. Local only — nothing is uploaded.</span>
+      </footer>
+    </div>
+    <script>
+      const btn = document.getElementById("copy");
+      const cmd = document.getElementById("cmd").textContent;
+      btn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(cmd);
+          btn.textContent = "copied";
+          setTimeout(() => { btn.textContent = "copy"; }, 1400);
+        } catch {
+          btn.textContent = "failed";
+        }
+      });
+    </script>
+  </body>
+</html>
