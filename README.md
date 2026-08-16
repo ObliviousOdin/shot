@@ -8,6 +8,8 @@ A lightweight take on [Screenshot for Chat](https://github.com/obra/ScreenshotFo
 
 ![Install shot with one shell command](docs/media/install-command.png)
 
+_Illustrated walkthrough. The installer prints the expanded absolute install path on your machine._
+
 ## Install
 
 `shot` is a readable POSIX shell script. It does not require Homebrew, Swift, or an account.
@@ -81,13 +83,13 @@ Install one capture backend and one clipboard tool:
 | Role | Supported tools |
 | --- | --- |
 | Capture | `grim` + `slurp` (Wayland), `maim`, `gnome-screenshot`, `scrot`, or ImageMagick `import` |
-| Clipboard | `wl-copy` (Wayland) or `xclip` / `xsel` (X11) |
+| Clipboard | `wl-copy` (Wayland), `xclip` (X11), or `xsel` as a best-effort X11 fallback |
 
-On Linux, the image goes to the clipboard and the path goes to the primary selection.
+With `wl-copy` or `xclip`, the image goes to the clipboard and the path goes to the primary selection. `xsel` does not declare the PNG MIME type, so image pasting depends on the receiving application; the path remains available from the primary selection.
 
 ## Browser workspace
 
-The browser workspace can capture a shared screen, accept a pasted or uploaded image, crop it, and prepare image, path, Markdown, or prompt-friendly clipboard output. Processing stays in the browser.
+The browser workspace can capture a shared screen, accept a pasted or uploaded image, crop it, copy the image, and generate text formats around a virtual path label. Processing stays in the browser, but the displayed `/tmp/shot-….png` value is **not** a file created on your computer. Choose **Save**, then use the downloaded file’s actual location with any path, Markdown, or prompt workflow that needs a real file.
 
 [Open the hosted workspace](https://obliviousodin.github.io/shot/), or run it locally:
 
@@ -100,7 +102,7 @@ npm run dev
 
 Then open <http://127.0.0.1:8080/>.
 
-![Shot browser workspace with a sample image loaded](docs/media/browser-workspace.png)
+![Shot browser workspace with a sample image and virtual path label](docs/media/browser-workspace.png)
 
 ## Development
 
